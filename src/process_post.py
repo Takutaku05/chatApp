@@ -30,11 +30,10 @@ def main():
         sys.exit(1)
 
     user_id = payload.get('user_id')
-    trip_key = payload.get('trip_key')
     body_content = payload.get('body')
 
-    if not user_id or not trip_key or body_content is None:
-        print("Error: Missing required fields (user_id, trip_key, body) in issue body.")
+    if not user_id or body_content is None:
+        print("Error: Missing required fields (user_id, body) in issue body.")
         sys.exit(1)
 
     # 3. data/posts.json があれば読み込む（なければ空リスト）
@@ -49,30 +48,14 @@ def main():
             print(f"Warning: Failed to load {posts_path}: {e}. Starting with empty list.")
             posts = []
 
-    # 4. ユーザー認証ロジック
-    # 送信された user_id が既存データに存在するかチェックする
-    existing_trip_key = None
-    for post in posts:
-        if post.get('user_id') == user_id:
-            existing_trip_key = post.get('trip_key')
-            # 見つかったらループを抜ける（最初の登録情報を正とする運用）
-            break
-    
-    if existing_trip_key is not None:
-        # 存在する場合: 保存されている trip_key と一致するか確認
-        if existing_trip_key != trip_key:
-            print(f"Authentication Error: Trip key mismatch for user_id '{user_id}'.")
-            sys.exit(1)
-    else:
-        # 存在しない場合: 新規ユーザーとして受け入れる（特に処理なし）
-        pass
+    # 4. ユーザー認証ロジック (削除: 誰でも任意のIDを使用可能)
+    pass
 
     # 5. 新しい投稿データを作成する
     new_post = {
         'id': str(uuid.uuid4()),
         'timestamp': datetime.datetime.now(datetime.timezone.utc).isoformat(),
         'user_id': user_id,
-        'trip_key': trip_key,
         'body': body_content
     }
 

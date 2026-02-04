@@ -18,17 +18,15 @@ document.addEventListener('DOMContentLoaded', () => {
         e.preventDefault();
 
         const userId = document.getElementById('userId').value.trim();
-        const tripKey = document.getElementById('tripKey').value.trim();
         const bodyContent = document.getElementById('body').value.trim();
 
-        if (!userId || !tripKey || !bodyContent) {
+        if (!userId || !bodyContent) {
             showToast('All fields are required.', 'error');
             return;
         }
 
         const payload = {
             user_id: userId,
-            trip_key: tripKey,
             body: bodyContent
         };
 
@@ -45,7 +43,7 @@ document.addEventListener('DOMContentLoaded', () => {
         showToast('Opened GitHub Issue page. Please click "Submit new issue".', 'success');
 
         // Save credentials and reset body
-        saveCredentials(userId, tripKey);
+        saveCredentials(userId);
         document.getElementById('body').value = '';
     });
 
@@ -102,17 +100,14 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Helpers
-    function saveCredentials(userId, tripKey) {
+    function saveCredentials(userId) {
         localStorage.setItem('bbs_user_id', userId);
-        localStorage.setItem('bbs_trip_key', tripKey);
     }
 
     function loadCredentials() {
         const userId = localStorage.getItem('bbs_user_id');
-        const tripKey = localStorage.getItem('bbs_trip_key');
 
         if (userId) document.getElementById('userId').value = userId;
-        if (tripKey) document.getElementById('tripKey').value = tripKey;
     }
 
     function showToast(message, type = 'success') {
