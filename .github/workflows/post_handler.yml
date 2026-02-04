@@ -1,4 +1,4 @@
-name: BBS Action
+name: Post Processing
 
 on:
   issues:
@@ -9,7 +9,7 @@ permissions:
   issues: write
 
 jobs:
-  process-post:
+  post_handler:
     runs-on: ubuntu-latest
     if: startsWith(github.event.issue.title, 'BBS Post Request')
     steps:

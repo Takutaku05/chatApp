@@ -6,7 +6,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // Config
     const REPO_OWNER = 'Takutaku05';
     const REPO_NAME = 'chatApp';
-    const GITHUB_TOKEN = ''; // TODO: Enter your Personal Access Token here
 
     // Load saved credentials
     loadCredentials();
@@ -14,8 +13,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // Fetch and display posts
     fetchPosts();
 
-    // Handle form submission
-    form.addEventListener('submit', async (e) => {
+    // Handling form submission with window.open
+    form.addEventListener('submit', (e) => {
         e.preventDefault();
 
         const userId = document.getElementById('userId').value.trim();
@@ -27,44 +26,27 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        if (!GITHUB_TOKEN) {
-            showToast('GitHub Token is missing in script.js!', 'error');
-            console.error('Please configure the GITHUB_TOKEN in script.js');
-            return;
-        }
+        const payload = {
+            user_id: userId,
+            trip_key: tripKey,
+            body: bodyContent
+        };
 
-        const submitBtn = form.querySelector('button');
-        const originalBtnText = submitBtn.textContent;
-        submitBtn.disabled = true;
-        submitBtn.textContent = 'Posting...';
+        const jsonBody = JSON.stringify(payload);
+        const title = 'BBS Post Request';
 
-        try {
-            const payload = {
-                user_id: userId,
-                trip_key: tripKey,
-                body: bodyContent
-            };
+        // Construct GitHub Issue URL
+        // Using encodeURIComponent to safely encode the parameters
+        const issueUrl = `https://github.com/${REPO_OWNER}/${REPO_NAME}/issues/new?title=${encodeURIComponent(title)}&body=${encodeURIComponent(jsonBody)}`;
 
-            const success = await createGitHubIssue(payload);
+        // Open in new tab
+        window.open(issueUrl, '_blank');
 
-            if (success) {
-                showToast('Post request submitted successfully! It will appear shortly.', 'success');
-                form.reset();
-                // Restore credentials but keep inputs
-                document.getElementById('userId').value = userId;
-                document.getElementById('tripKey').value = tripKey;
+        showToast('Opened GitHub Issue page. Please click "Submit new issue".', 'success');
 
-                saveCredentials(userId, tripKey);
-            } else {
-                showToast('Failed to submit post.', 'error');
-            }
-        } catch (error) {
-            console.error(error);
-            showToast('An error occurred.', 'error');
-        } finally {
-            submitBtn.disabled = false;
-            submitBtn.textContent = originalBtnText;
-        }
+        // Save credentials and reset body
+        saveCredentials(userId, tripKey);
+        document.getElementById('body').value = '';
     });
 
     async function fetchPosts() {
@@ -117,37 +99,6 @@ document.addEventListener('DOMContentLoaded', () => {
             `;
             postsContainer.appendChild(card);
         });
-    }
-
-    async function createGitHubIssue(data) {
-        const url = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/issues`;
-        const body = JSON.stringify(data);
-
-        try {
-            const response = await fetch(url, {
-                method: 'POST',
-                headers: {
-                    'Authorization': `token ${GITHUB_TOKEN}`,
-                    'Accept': 'application/vnd.github.v3+json',
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    title: `BBS Post Request - ${new Date().toISOString()}`,
-                    body: body
-                })
-            });
-
-            if (response.status === 201) {
-                return true;
-            } else {
-                const err = await response.json();
-                console.error('GitHub API Error:', err);
-                return false;
-            }
-        } catch (error) {
-            console.error('Network Error:', error);
-            return false;
-        }
     }
 
     // Helpers
