@@ -1,0 +1,45 @@
+name: BBS Action
+
+on:
+  issues:
+    types: [opened]
+
+permissions:
+  contents: write
+  issues: write
+
+jobs:
+  process-post:
+    runs-on: ubuntu-latest
+    if: startsWith(github.event.issue.title, 'BBS Post Request')
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: Process Post
+        run: python src/process_post.py
+        env:
+          GITHUB_EVENT_PATH: ${{ github.event_path }}
+
+      - name: Commit and Push changes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add data/posts.json
+          # 変更がある場合のみコミット
+          if git diff --cached --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "Add new post from issue #${{ github.event.issue.number }}"
+            git push
+          fi
+
+      - name: Close Issue
+        uses: peter-evans/close-issue@v3
+        with:
+          comment: "Post processed successfully."
